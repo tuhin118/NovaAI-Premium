@@ -1,1 +1,161 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080b14">
+
+    <title>NovaAI — Premium AI Assistant</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+
+    <main class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">✦</div>
+                <div>
+                    <h1>NovaAI</h1>
+                    <span>AI Assistant</span>
+                </div>
+            </div>
+
+            <button class="new-chat-btn" id="newChatBtn">
+                <span>＋</span>
+                New Chat
+            </button>
+
+            <div class="sidebar-section">
+                <p class="section-title">Recent Chats</p>
+
+                <div class="chat-list" id="chatList">
+                    <div class="empty-history">
+                        No conversations yet
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-bottom">
+
+                <button class="side-btn" id="themeBtn">
+                    <span>◐</span>
+                    Theme
+                </button>
+
+                <button class="side-btn">
+                    <span>⚙</span>
+                    Settings
+                </button>
+
+            </div>
+
+        </aside>
+
+        <!-- Main Chat -->
+        <section class="chat-area">
+
+            <!-- Header -->
+            <header class="topbar">
+
+                <button class="menu-btn" id="menuBtn">
+                    ☰
+                </button>
+
+                <div class="mobile-brand">
+                    <div class="brand-icon small">✦</div>
+                    <strong>NovaAI</strong>
+                </div>
+
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span>Online</span>
+                </div>
+
+            </header>
+
+            <!-- Messages -->
+            <div class="messages" id="messages">
+
+                <div class="welcome">
+
+                    <div class="welcome-icon">✦</div>
+
+                    <h2>How can I help you?</h2>
+
+                    <p>
+                        Ask NovaAI anything. Start a conversation and explore
+                        the possibilities.
+                    </p>
+
+                    <div class="suggestions">
+
+                        <button class="suggestion">
+                            Explain artificial intelligence
+                        </button>
+
+                        <button class="suggestion">
+                            Help me write something
+                        </button>
+
+                        <button class="suggestion">
+                            Give me a creative idea
+                        </button>
+
+                        <button class="suggestion">
+                            Help me with coding
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-wrapper">
+
+                <div class="input-box">
+
+                    <button class="attach-btn" title="Attach file">
+                        ＋
+                    </button>
+
+                    <textarea
+                        id="messageInput"
+                        placeholder="Ask NovaAI anything..."
+                        rows="1"
+                    ></textarea>
+
+                    <button
+                        class="send-btn"
+                        id="sendBtn"
+                        title="Send message"
+                    >
+                        ➤
+                    </button>
+
+                </div>
+
+                <p class="disclaimer">
+                    NovaAI can make mistakes. Check important information.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

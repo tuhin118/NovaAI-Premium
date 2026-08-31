@@ -1,10 +1,10 @@
-
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
 const messages = document.getElementById("messages");
 const newChatBtn = document.getElementById("newChatBtn");
 const menuBtn = document.getElementById("menuBtn");
 const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
 const chatList = document.getElementById("chatList");
 const themeBtn = document.getElementById("themeBtn");
 
@@ -26,6 +26,7 @@ function sendMessage() {
     addMessage(text, "user");
 
     messageInput.value = "";
+
     autoResize();
 
     saveChat(text);
@@ -94,7 +95,8 @@ function showTyping() {
 
 function removeTyping() {
 
-    const typing = document.getElementById("typingIndicator");
+    const typing =
+        document.getElementById("typingIndicator");
 
     if (typing) {
         typing.remove();
@@ -108,7 +110,8 @@ function removeTyping() {
 
 function removeWelcome() {
 
-    const welcome = document.querySelector(".welcome");
+    const welcome =
+        document.querySelector(".welcome");
 
     if (welcome) {
         welcome.remove();
@@ -157,6 +160,7 @@ messageInput.addEventListener("keydown", (event) => {
 
         sendMessage();
     }
+
 });
 
 
@@ -171,18 +175,27 @@ sendBtn.addEventListener("click", sendMessage);
    SUGGESTIONS
 ========================= */
 
-document.querySelectorAll(".suggestion").forEach(button => {
+function attachSuggestionEvents() {
 
-    button.addEventListener("click", () => {
+    document.querySelectorAll(".suggestion").forEach(button => {
 
-        messageInput.value = button.textContent.trim();
+        button.addEventListener("click", () => {
 
-        autoResize();
+            messageInput.value =
+                button.textContent.trim();
 
-        messageInput.focus();
+            autoResize();
+
+            messageInput.focus();
+
+        });
+
     });
 
-});
+}
+
+
+attachSuggestionEvents();
 
 
 /* =========================
@@ -205,20 +218,36 @@ newChatBtn.addEventListener("click", () => {
 
             <div class="suggestions">
 
-                <button class="suggestion">
+                <button
+                    class="suggestion"
+                    type="button">
+
                     Explain artificial intelligence
+
                 </button>
 
-                <button class="suggestion">
+                <button
+                    class="suggestion"
+                    type="button">
+
                     Help me write something
+
                 </button>
 
-                <button class="suggestion">
+                <button
+                    class="suggestion"
+                    type="button">
+
                     Give me a creative idea
+
                 </button>
 
-                <button class="suggestion">
+                <button
+                    class="suggestion"
+                    type="button">
+
                     Help me with coding
+
                 </button>
 
             </div>
@@ -231,6 +260,8 @@ newChatBtn.addEventListener("click", () => {
     messageInput.value = "";
 
     autoResize();
+
+    closeSidebar();
 });
 
 
@@ -238,9 +269,79 @@ newChatBtn.addEventListener("click", () => {
    MOBILE SIDEBAR
 ========================= */
 
+function openSidebar() {
+
+    sidebar.classList.add("open");
+
+    if (sidebarOverlay) {
+        sidebarOverlay.classList.add("active");
+    }
+
+    menuBtn.setAttribute(
+        "aria-expanded",
+        "true"
+    );
+}
+
+
+function closeSidebar() {
+
+    sidebar.classList.remove("open");
+
+    if (sidebarOverlay) {
+        sidebarOverlay.classList.remove("active");
+    }
+
+    menuBtn.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+}
+
+
 menuBtn.addEventListener("click", () => {
 
-    sidebar.classList.toggle("open");
+    if (sidebar.classList.contains("open")) {
+
+        closeSidebar();
+
+    } else {
+
+        openSidebar();
+
+    }
+
+});
+
+
+/* =========================
+   CLOSE SIDEBAR
+   WHEN TAPPING OUTSIDE
+========================= */
+
+if (sidebarOverlay) {
+
+    sidebarOverlay.addEventListener("click", () => {
+
+        closeSidebar();
+
+    });
+
+}
+
+
+/* =========================
+   CLOSE SIDEBAR
+   WHEN CHAT AREA IS TAPPED
+========================= */
+
+messages.addEventListener("click", () => {
+
+    if (sidebar.classList.contains("open")) {
+
+        closeSidebar();
+
+    }
 
 });
 
@@ -295,9 +396,12 @@ function renderHistory() {
 
     chats.forEach(chat => {
 
-        const item = document.createElement("button");
+        const item =
+            document.createElement("button");
 
         item.className = "side-btn";
+
+        item.type = "button";
 
         item.textContent =
             chat.text.length > 28
@@ -307,31 +411,59 @@ function renderHistory() {
         chatList.appendChild(item);
 
     });
+
 }
 
 
 /* =========================
-   SUGGESTION EVENTS
+   ANDROID / BROWSER BACK
 ========================= */
 
-function attachSuggestionEvents() {
+let sidebarHistoryActive = false;
 
-    document.querySelectorAll(".suggestion").forEach(button => {
 
-        button.addEventListener("click", () => {
+function enableSidebarHistory() {
 
-            messageInput.value =
-                button.textContent.trim();
+    if (sidebarHistoryActive) return;
 
-            autoResize();
+    history.pushState(
+        { novaaiSidebar: true },
+        "",
+        window.location.href
+    );
 
-            messageInput.focus();
-
-        });
-
-    });
-
+    sidebarHistoryActive = true;
 }
+
+
+function disableSidebarHistory() {
+
+    sidebarHistoryActive = false;
+}
+
+
+menuBtn.addEventListener("click", () => {
+
+    if (sidebar.classList.contains("open")) {
+
+        enableSidebarHistory();
+
+    }
+
+});
+
+
+window.addEventListener("popstate", () => {
+
+    if (sidebar.classList.contains("open")) {
+
+        closeSidebar();
+
+        disableSidebarHistory();
+
+    }
+
+});
 
 
 /* =========================

@@ -12,6 +12,9 @@ const API_URL = "https://novaai-premium.onrender.com/api/chat";
 
 let chats = JSON.parse(localStorage.getItem("novaai_chats")) || [];
 
+let isSending = false;
+let sidebarHistoryState = false;
+
 
 /* =========================
    SEND MESSAGE
@@ -21,13 +24,18 @@ async function sendMessage() {
 
     const text = messageInput.value.trim();
 
-    if (!text) return;
+    if (!text || isSending) return;
+
+    isSending = true;
+
+    sendBtn.disabled = true;
 
     removeWelcome();
 
     addMessage(text, "user");
 
     messageInput.value = "";
+
     autoResize();
 
     saveChat(text);
@@ -50,28 +58,32 @@ async function sendMessage() {
 
         });
 
+        let data = {};
 
-        const data = await response.json();
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            data = {};
+        }
 
         removeTyping();
-
 
         if (!response.ok) {
 
             addMessage(
-                data.error || "Sorry, something went wrong.",
+                data.error ||
+                `Server error (${response.status}). আবার চেষ্টা করুন।`,
                 "ai"
             );
 
             return;
         }
 
-
         addMessage(
-            data.reply || "No response received.",
+            data.reply ||
+            "NovaAI কোনো response দেয়নি। আবার চেষ্টা করুন।",
             "ai"
         );
-
 
     } catch (error) {
 
@@ -84,8 +96,15 @@ async function sendMessage() {
             "ai"
         );
 
-    }
+    } finally {
 
+        isSending = false;
+
+        sendBtn.disabled = false;
+
+        messageInput.focus();
+
+    }
 }
 
 
@@ -119,6 +138,8 @@ function addMessage(text, type) {
 
 function showTyping() {
 
+    removeTyping();
+
     const typing = document.createElement("div");
 
     typing.className = "message ai";
@@ -145,7 +166,6 @@ function removeTyping() {
     if (typing) {
         typing.remove();
     }
-
 }
 
 
@@ -161,7 +181,6 @@ function removeWelcome() {
     if (welcome) {
         welcome.remove();
     }
-
 }
 
 
@@ -178,7 +197,6 @@ function scrollToBottom() {
         behavior: "smooth"
 
     });
-
 }
 
 
@@ -192,7 +210,6 @@ function autoResize() {
 
     messageInput.style.height =
         Math.min(messageInput.scrollHeight, 140) + "px";
-
 }
 
 
@@ -263,6 +280,7 @@ function attachSuggestionEvents() {
 
 }
 
+
 attachSuggestionEvents();
 
 
@@ -278,9 +296,13 @@ newChatBtn.addEventListener(
 
             <div class="welcome">
 
-                <div class="welcome-icon">✦</div>
+                <div class="welcome-icon">
+                    ✦
+                </div>
 
-                <h2>How can I help you?</h2>
+                <h2>
+                    How can I help you?
+                </h2>
 
                 <p>
                     Ask NovaAI anything. Start a
@@ -290,20 +312,36 @@ newChatBtn.addEventListener(
 
                 <div class="suggestions">
 
-                    <button class="suggestion">
+                    <button
+                        class="suggestion"
+                        type="button">
+
                         Explain artificial intelligence
+
                     </button>
 
-                    <button class="suggestion">
+                    <button
+                        class="suggestion"
+                        type="button">
+
                         Help me write something
+
                     </button>
 
-                    <button class="suggestion">
+                    <button
+                        class="suggestion"
+                        type="button">
+
                         Give me a creative idea
+
                     </button>
 
-                    <button class="suggestion">
+                    <button
+                        class="suggestion"
+                        type="button">
+
                         Help me with coding
+
                     </button>
 
                 </div>
@@ -320,6 +358,8 @@ newChatBtn.addEventListener(
 
         closeSidebar();
 
+        messageInput.focus();
+
     }
 );
 
@@ -334,8 +374,16 @@ function openSidebar() {
 
     if (sidebarOverlay) {
         sidebarOverlay.classList.add("active");
+        sidebarOverlay.setAttribute(
+            "aria-hidden",
+            "false"
+        );
     }
 
+    menuBtn.setAttribute(
+        "aria-expanded",
+        "true"
+    );
 }
 
 
@@ -345,22 +393,77 @@ function closeSidebar() {
 
     if (sidebarOverlay) {
         sidebarOverlay.classList.remove("active");
+        sidebarOverlay.setAttribute(
+            "aria-hidden",
+            "true"
+        );
     }
 
+    menuBtn.setAttribute(
+        "aria-expanded",
+        "false"
+    );
 }
 
 
+/* =========================
+   SIDEBAR HISTORY
+========================= */
+
+function openSidebarWithHistory() {
+
+    openSidebar();
+
+    if (!sidebarHistoryState) {
+
+        history.pushState(
+            {
+                novaaiSidebar: true
+            },
+            "",
+            window.location.href
+        );
+
+        sidebarHistoryState = true;
+    }
+}
+
+
+function closeSidebarWithHistory() {
+
+    if (!sidebar.classList.contains("open")) {
+        return;
+    }
+
+    closeSidebar();
+
+    if (sidebarHistoryState) {
+
+        sidebarHistoryState = false;
+
+        history.back();
+
+    }
+}
+
+
+/* =========================
+   MENU BUTTON
+========================= */
+
 menuBtn.addEventListener(
     "click",
-    () => {
+    (event) => {
+
+        event.stopPropagation();
 
         if (sidebar.classList.contains("open")) {
 
-            closeSidebar();
+            closeSidebarWithHistory();
 
         } else {
 
-            openSidebar();
+            openSidebarWithHistory();
 
         }
 
@@ -369,41 +472,49 @@ menuBtn.addEventListener(
 
 
 /* =========================
-   CLOSE SIDEBAR ON OVERLAY
+   SIDEBAR OVERLAY
 ========================= */
 
 if (sidebarOverlay) {
 
     sidebarOverlay.addEventListener(
         "click",
-        closeSidebar
+        () => {
+
+            closeSidebarWithHistory();
+
+        }
     );
 
 }
 
 
 /* =========================
-   CLOSE SIDEBAR ON MOBILE
+   CLOSE SIDEBAR
+   WHEN CLICKING OUTSIDE
 ========================= */
 
 document.addEventListener(
     "click",
     (event) => {
 
-        if (window.innerWidth > 800) return;
-
-        if (!sidebar.classList.contains("open")) return;
-
-        if (
-            sidebar.contains(event.target) ||
-            menuBtn.contains(event.target) ||
-            (sidebarOverlay &&
-             sidebarOverlay.contains(event.target))
-        ) {
+        if (window.innerWidth > 800) {
             return;
         }
 
-        closeSidebar();
+        if (!sidebar.classList.contains("open")) {
+            return;
+        }
+
+        if (sidebar.contains(event.target)) {
+            return;
+        }
+
+        if (menuBtn.contains(event.target)) {
+            return;
+        }
+
+        closeSidebarWithHistory();
 
     }
 );
@@ -412,56 +523,6 @@ document.addEventListener(
 /* =========================
    ANDROID / BROWSER BACK
 ========================= */
-
-let sidebarHistoryState = false;
-
-
-function pushSidebarHistory() {
-
-    if (!sidebarHistoryState) {
-
-        history.pushState(
-            { novaaiSidebar: true },
-            "",
-            window.location.href
-        );
-
-        sidebarHistoryState = true;
-
-    }
-
-}
-
-
-function openSidebarWithHistory() {
-
-    openSidebar();
-
-    pushSidebarHistory();
-
-}
-
-
-menuBtn.onclick = () => {
-
-    if (sidebar.classList.contains("open")) {
-
-        closeSidebar();
-
-        if (sidebarHistoryState) {
-
-            history.back();
-
-        }
-
-    } else {
-
-        openSidebarWithHistory();
-
-    }
-
-};
-
 
 window.addEventListener(
     "popstate",
@@ -474,6 +535,26 @@ window.addEventListener(
         }
 
         sidebarHistoryState = false;
+
+    }
+);
+
+
+/* =========================
+   HANDLE RESIZE
+========================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if (window.innerWidth > 800) {
+
+            closeSidebar();
+
+            sidebarHistoryState = false;
+
+        }
 
     }
 );
@@ -521,6 +602,10 @@ function saveChat(text) {
 }
 
 
+/* =========================
+   RENDER HISTORY
+========================= */
+
 function renderHistory() {
 
     if (!chats.length) {
@@ -537,9 +622,7 @@ function renderHistory() {
 
     }
 
-
     chatList.innerHTML = "";
-
 
     chats.forEach(chat => {
 
@@ -547,6 +630,8 @@ function renderHistory() {
             document.createElement("button");
 
         item.className = "side-btn";
+
+        item.type = "button";
 
         item.textContent =
             chat.text.length > 28
@@ -565,3 +650,5 @@ function renderHistory() {
 ========================= */
 
 renderHistory();
+
+autoResize();

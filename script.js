@@ -4,9 +4,11 @@ const messages = document.getElementById("messages");
 const newChatBtn = document.getElementById("newChatBtn");
 const menuBtn = document.getElementById("menuBtn");
 const sidebar = document.getElementById("sidebar");
-const sidebarOverlay = document.getElementById("sidebarOverlay");
 const chatList = document.getElementById("chatList");
 const themeBtn = document.getElementById("themeBtn");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+const API_URL = "https://novaai-premium.onrender.com/api/chat";
 
 let chats = JSON.parse(localStorage.getItem("novaai_chats")) || [];
 
@@ -15,7 +17,7 @@ let chats = JSON.parse(localStorage.getItem("novaai_chats")) || [];
    SEND MESSAGE
 ========================= */
 
-function sendMessage() {
+async function sendMessage() {
 
     const text = messageInput.value.trim();
 
@@ -26,23 +28,64 @@ function sendMessage() {
     addMessage(text, "user");
 
     messageInput.value = "";
-
     autoResize();
 
     saveChat(text);
 
     showTyping();
 
-    setTimeout(() => {
+    try {
+
+        const response = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                message: text
+            })
+
+        });
+
+
+        const data = await response.json();
+
+        removeTyping();
+
+
+        if (!response.ok) {
+
+            addMessage(
+                data.error || "Sorry, something went wrong.",
+                "ai"
+            );
+
+            return;
+        }
+
+
+        addMessage(
+            data.reply || "No response received.",
+            "ai"
+        );
+
+
+    } catch (error) {
+
+        console.error("NovaAI Error:", error);
 
         removeTyping();
 
         addMessage(
-            "আপনার বার্তা পেয়েছি। আমি NovaAI-এর AI response system-এর জন্য প্রস্তুত। 🚀",
+            "NovaAI server-এর সাথে সংযোগ করা যাচ্ছে না। কিছুক্ষণ পরে আবার চেষ্টা করুন।",
             "ai"
         );
 
-    }, 900);
+    }
+
 }
 
 
@@ -79,6 +122,7 @@ function showTyping() {
     const typing = document.createElement("div");
 
     typing.className = "message ai";
+
     typing.id = "typingIndicator";
 
     typing.innerHTML = `
@@ -101,6 +145,7 @@ function removeTyping() {
     if (typing) {
         typing.remove();
     }
+
 }
 
 
@@ -116,6 +161,7 @@ function removeWelcome() {
     if (welcome) {
         welcome.remove();
     }
+
 }
 
 
@@ -126,9 +172,13 @@ function removeWelcome() {
 function scrollToBottom() {
 
     messages.scrollTo({
+
         top: messages.scrollHeight,
+
         behavior: "smooth"
+
     });
+
 }
 
 
@@ -142,33 +192,47 @@ function autoResize() {
 
     messageInput.style.height =
         Math.min(messageInput.scrollHeight, 140) + "px";
+
 }
 
 
-messageInput.addEventListener("input", autoResize);
+messageInput.addEventListener(
+    "input",
+    autoResize
+);
 
 
 /* =========================
    ENTER TO SEND
 ========================= */
 
-messageInput.addEventListener("keydown", (event) => {
+messageInput.addEventListener(
+    "keydown",
+    (event) => {
 
-    if (event.key === "Enter" && !event.shiftKey) {
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
 
-        event.preventDefault();
+            event.preventDefault();
 
-        sendMessage();
+            sendMessage();
+
+        }
+
     }
-
-});
+);
 
 
 /* =========================
    SEND BUTTON
 ========================= */
 
-sendBtn.addEventListener("click", sendMessage);
+sendBtn.addEventListener(
+    "click",
+    sendMessage
+);
 
 
 /* =========================
@@ -177,23 +241,27 @@ sendBtn.addEventListener("click", sendMessage);
 
 function attachSuggestionEvents() {
 
-    document.querySelectorAll(".suggestion").forEach(button => {
+    document
+        .querySelectorAll(".suggestion")
+        .forEach(button => {
 
-        button.addEventListener("click", () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-            messageInput.value =
-                button.textContent.trim();
+                    messageInput.value =
+                        button.textContent.trim();
 
-            autoResize();
+                    autoResize();
 
-            messageInput.focus();
+                    messageInput.focus();
+
+                }
+            );
 
         });
 
-    });
-
 }
-
 
 attachSuggestionEvents();
 
@@ -202,67 +270,58 @@ attachSuggestionEvents();
    NEW CHAT
 ========================= */
 
-newChatBtn.addEventListener("click", () => {
+newChatBtn.addEventListener(
+    "click",
+    () => {
 
-    messages.innerHTML = `
-        <div class="welcome">
+        messages.innerHTML = `
 
-            <div class="welcome-icon">✦</div>
+            <div class="welcome">
 
-            <h2>How can I help you?</h2>
+                <div class="welcome-icon">✦</div>
 
-            <p>
-                Ask NovaAI anything. Start a conversation and explore
-                the possibilities.
-            </p>
+                <h2>How can I help you?</h2>
 
-            <div class="suggestions">
+                <p>
+                    Ask NovaAI anything. Start a
+                    conversation and explore the
+                    possibilities.
+                </p>
 
-                <button
-                    class="suggestion"
-                    type="button">
+                <div class="suggestions">
 
-                    Explain artificial intelligence
+                    <button class="suggestion">
+                        Explain artificial intelligence
+                    </button>
 
-                </button>
+                    <button class="suggestion">
+                        Help me write something
+                    </button>
 
-                <button
-                    class="suggestion"
-                    type="button">
+                    <button class="suggestion">
+                        Give me a creative idea
+                    </button>
 
-                    Help me write something
+                    <button class="suggestion">
+                        Help me with coding
+                    </button>
 
-                </button>
-
-                <button
-                    class="suggestion"
-                    type="button">
-
-                    Give me a creative idea
-
-                </button>
-
-                <button
-                    class="suggestion"
-                    type="button">
-
-                    Help me with coding
-
-                </button>
+                </div>
 
             </div>
 
-        </div>
-    `;
+        `;
 
-    attachSuggestionEvents();
+        attachSuggestionEvents();
 
-    messageInput.value = "";
+        messageInput.value = "";
 
-    autoResize();
+        autoResize();
 
-    closeSidebar();
-});
+        closeSidebar();
+
+    }
+);
 
 
 /* =========================
@@ -277,10 +336,6 @@ function openSidebar() {
         sidebarOverlay.classList.add("active");
     }
 
-    menuBtn.setAttribute(
-        "aria-expanded",
-        "true"
-    );
 }
 
 
@@ -292,69 +347,152 @@ function closeSidebar() {
         sidebarOverlay.classList.remove("active");
     }
 
-    menuBtn.setAttribute(
-        "aria-expanded",
-        "false"
-    );
 }
 
 
-menuBtn.addEventListener("click", () => {
+menuBtn.addEventListener(
+    "click",
+    () => {
 
-    if (sidebar.classList.contains("open")) {
+        if (sidebar.classList.contains("open")) {
 
-        closeSidebar();
+            closeSidebar();
 
-    } else {
+        } else {
 
-        openSidebar();
+            openSidebar();
+
+        }
 
     }
-
-});
+);
 
 
 /* =========================
-   CLOSE SIDEBAR
-   WHEN TAPPING OUTSIDE
+   CLOSE SIDEBAR ON OVERLAY
 ========================= */
 
 if (sidebarOverlay) {
 
-    sidebarOverlay.addEventListener("click", () => {
-
-        closeSidebar();
-
-    });
+    sidebarOverlay.addEventListener(
+        "click",
+        closeSidebar
+    );
 
 }
 
 
 /* =========================
-   CLOSE SIDEBAR
-   WHEN CHAT AREA IS TAPPED
+   CLOSE SIDEBAR ON MOBILE
 ========================= */
 
-messages.addEventListener("click", () => {
+document.addEventListener(
+    "click",
+    (event) => {
+
+        if (window.innerWidth > 800) return;
+
+        if (!sidebar.classList.contains("open")) return;
+
+        if (
+            sidebar.contains(event.target) ||
+            menuBtn.contains(event.target) ||
+            (sidebarOverlay &&
+             sidebarOverlay.contains(event.target))
+        ) {
+            return;
+        }
+
+        closeSidebar();
+
+    }
+);
+
+
+/* =========================
+   ANDROID / BROWSER BACK
+========================= */
+
+let sidebarHistoryState = false;
+
+
+function pushSidebarHistory() {
+
+    if (!sidebarHistoryState) {
+
+        history.pushState(
+            { novaaiSidebar: true },
+            "",
+            window.location.href
+        );
+
+        sidebarHistoryState = true;
+
+    }
+
+}
+
+
+function openSidebarWithHistory() {
+
+    openSidebar();
+
+    pushSidebarHistory();
+
+}
+
+
+menuBtn.onclick = () => {
 
     if (sidebar.classList.contains("open")) {
 
         closeSidebar();
 
+        if (sidebarHistoryState) {
+
+            history.back();
+
+        }
+
+    } else {
+
+        openSidebarWithHistory();
+
     }
 
-});
+};
+
+
+window.addEventListener(
+    "popstate",
+    () => {
+
+        if (sidebar.classList.contains("open")) {
+
+            closeSidebar();
+
+        }
+
+        sidebarHistoryState = false;
+
+    }
+);
 
 
 /* =========================
    THEME BUTTON
 ========================= */
 
-themeBtn.addEventListener("click", () => {
+themeBtn.addEventListener(
+    "click",
+    () => {
 
-    document.body.classList.toggle("light-mode");
+        document.body.classList.toggle(
+            "light-mode"
+        );
 
-});
+    }
+);
 
 
 /* =========================
@@ -364,8 +502,11 @@ themeBtn.addEventListener("click", () => {
 function saveChat(text) {
 
     chats.unshift({
+
         text: text,
+
         time: Date.now()
+
     });
 
     chats = chats.slice(0, 10);
@@ -376,6 +517,7 @@ function saveChat(text) {
     );
 
     renderHistory();
+
 }
 
 
@@ -384,15 +526,20 @@ function renderHistory() {
     if (!chats.length) {
 
         chatList.innerHTML = `
+
             <div class="empty-history">
                 No conversations yet
             </div>
+
         `;
 
         return;
+
     }
 
+
     chatList.innerHTML = "";
+
 
     chats.forEach(chat => {
 
@@ -400,8 +547,6 @@ function renderHistory() {
             document.createElement("button");
 
         item.className = "side-btn";
-
-        item.type = "button";
 
         item.textContent =
             chat.text.length > 28
@@ -413,57 +558,6 @@ function renderHistory() {
     });
 
 }
-
-
-/* =========================
-   ANDROID / BROWSER BACK
-========================= */
-
-let sidebarHistoryActive = false;
-
-
-function enableSidebarHistory() {
-
-    if (sidebarHistoryActive) return;
-
-    history.pushState(
-        { novaaiSidebar: true },
-        "",
-        window.location.href
-    );
-
-    sidebarHistoryActive = true;
-}
-
-
-function disableSidebarHistory() {
-
-    sidebarHistoryActive = false;
-}
-
-
-menuBtn.addEventListener("click", () => {
-
-    if (sidebar.classList.contains("open")) {
-
-        enableSidebarHistory();
-
-    }
-
-});
-
-
-window.addEventListener("popstate", () => {
-
-    if (sidebar.classList.contains("open")) {
-
-        closeSidebar();
-
-        disableSidebarHistory();
-
-    }
-
-});
 
 
 /* =========================
